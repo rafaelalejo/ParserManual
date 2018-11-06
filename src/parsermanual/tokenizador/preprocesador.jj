@@ -1,0 +1,77 @@
+PARSER_BEGIN(TokenizadorPreprocesador)
+
+package parsermanual.tokenizador;
+
+public class TokenizadorPreprocesador {
+}
+PARSER_END(TokenizadorPreprocesador)
+SKIP : {
+ " "
+|  "\t"
+|  "\n"
+|  "\r"
+|  <"rem" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+}
+
+
+
+TOKEN:
+{
+	    <PLUS : "+" >
+	|   <MINUS:"-">
+	|   <MULTIPLY:"*">
+	|   <DIVIDE:"/">
+}
+
+//Palabras reservadas del preprocesador
+TOKEN : {
+        <DIRECTIVA: "#">
+    |   <INCLUDE: "include">
+    |   <DEFINE: "define">
+}
+
+//Estandar para un identificador
+//Nota: No puede iniciar con un digito
+TOKEN: {
+    <IDENTIFICADOR: <LETRA>(<LETRA>|<DIGITO>)*(["$"])?>
+    | <#LETRA: (["a"-"z", "A"-"Z"]) >
+    | <#DIGITO: (["0"-"9"])>
+}
+
+// Tipos de datos que pueden aparecer en operaciones aritmeticas
+TOKEN: {
+        <NUMERICO: <ENTERO>|<DECIMAL>>
+    |   <ENTERO: (<DIGITO>)+>
+    |   <DECIMAL: <ENTERO>"."<ENTERO>>
+}
+
+//Para funciones validas en un define
+TOKEN : {
+        <COMA : ",">
+    |   <PAREN_IZQ : "(">
+    |   <PAREN_DER : ")">
+    |   <PATH_IZQ : "<">
+    |   <PATH_DER : ">">
+    |   <COMILLA : "\"">
+}
+//TOKEN : {
+//        <FUNCION_DEFINE: <IDENTIFICADOR>"("<ARGS_FUNCION_DEFINE>")">
+//    |   <ARGS_FUNCION_DEFINE: <IDENTIFICADOR>(","(" ")*<IDENTIFICADOR>)*>
+//}
+
+//Punto de entrada
+
+TOKEN:
+{
+    <PATH: ("/"){0,1}(<IDENTIFICADOR>"/")*<IDENTIFICADOR>("."<IDENTIFICADOR>)+ >
+}
+void Start () : {}
+{
+    (
+        <DIRECTIVA>|
+        <INCLUDE>|
+        <DEFINE>|
+        <IDENTIFICADOR>
+    )*
+    <EOF>
+}

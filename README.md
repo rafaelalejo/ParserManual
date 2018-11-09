@@ -2,7 +2,7 @@
 
 ## Uso
 ```
-java -jar ParserManual.jar < codigo.c
+java -jar ParserManual.jar < test.c
 ```
 
 ## Librerias utilizadas

@@ -2,11 +2,7 @@ package parsermanual;
 
 import parsermanual.tokenizador.*;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Stack;
+import java.util.*;
 
 import static parsermanual.tokenizador.TokenizadorPreprocesadorConstants.*;
 
@@ -35,36 +31,58 @@ public class ParserPreprocesador {
     public static HashMap<Integer, Token> terms = new HashMap<>();
 
     //Stacks para el algoritmo de parsing descente predictivo
-    public static Stack<Token> source_s = new Stack<>();
-    public static Stack<Token> parser_s = new Stack<>();
+    public static Stack<Token> source_s;
+    public static Stack<Token> parser_s;
+    public static boolean errores = false;
 
     public static void main(String[] args) {
         prepararTerminales();
         prepararNoTerminales();
 
-        tokenizador = new TokenizadorPreprocesador(new StringReader("#define pi def*3.141516/2*2 + 4+512*func(a,b)"));
+        //tokenizador = new TokenizadorPreprocesador(new StringReader("#define pi def*3.141516/2*2 + 4+512*func(a,b)"));
+        tokenizador = new TokenizadorPreprocesador(System.in);
 
         Token t = tokenizador.getNextToken();
 
         while (t.kind != 0) {
-            source_s.push(t);
-            t = tokenizador.getNextToken();
+            source_s = new Stack<>();
+            parser_s = new Stack<>();
+
+            while (t.kind != 0 && t.kind != NUEVA_LINEA) {
+                source_s.push(t);
+                t = tokenizador.getNextToken();
+            }
+
+            if(t.kind ==  EOF) {
+                source_s.push(t);
+            } else {
+                source_s.push(getToken(EOF));
+            }
+
+            //Los no terminales tienen que invertirse en orden LIFO
+            Collections.reverse(source_s);
+
+            //Primeros elementos del Stack
+            parser_s.push(getToken(EOF));
+            parser_s.push(S);
+
+            parsearEntrada();
+
+            if(t.kind == NUEVA_LINEA) {
+                t = tokenizador.getNextToken();
+            }
+
         }
 
-        source_s.push(getToken(EOF));
+        System.out.println("Parsing terminado " + (errores ? "con" : "sin") + " errores.");
+    }
 
-        //Los no terminales tienen que invertirse en orden LIFO
-        Collections.reverse(source_s);
 
-        //Primeros elementos del Stack
-        parser_s.push(getToken(EOF));
-        parser_s.push(S);
+    public static void parsearEntrada() {
 
-        Token last_in, last_stack, prev_in;
+        Token last_in, last_stack;
 
-        boolean errores = false;
-
-        while (!source_s.isEmpty()) {
+        while (!source_s.isEmpty() && !parser_s.isEmpty()) {
             last_in = source_s.peek();
             last_stack = parser_s.peek();
 
@@ -73,13 +91,12 @@ public class ParserPreprocesador {
             ArrayList<Token> prod;
 
             if (table.isNonTerminal(last_stack)) {
-
                 //Obtener producción asignada al terminal
                 prod = table.getProd(last_stack, last_in);
 
                 //De no existir producción, se entra en modo pánico y se elimina el Token
                 if (prod == null) {
-                    mostrarError(last_in);
+                    mostrarNoSeEsperaba(last_in);
                     errores = true;
                     source_s.pop();
                 } else {
@@ -95,7 +112,9 @@ public class ParserPreprocesador {
                         parser_s.pop();
                     }
 
+                    //Recuperación de errores
                     if (parser_s.peek() == SYNCH) {
+                        mostrarNoSeEsperaba(last_in);
                         errores = true;
                         parser_s.pop();
                     }
@@ -107,21 +126,22 @@ public class ParserPreprocesador {
                     source_s.pop();
                     parser_s.pop();
                 } else {
-                    mostrarError(last_in);
-                    System.err.println("Ocurrió un error interno.");
-                    return;
+                    mostrarSeEsperaba(last_stack, last_in);
+                    source_s.pop();
+                    source_s.push(last_stack);
+                    errores = true;
                 }
             }
-
-            //Token de entrada previo
-            prev_in = last_in;
         }
 
-        System.out.println("Parsing terminado " + (errores ? "con"  : "sin") + " errores.");
     }
 
-    public static void mostrarError(Token e) {
-        System.err.println("No se esperaba símbolo: '" + e.image + "' en la línea " + e.beginLine + ", columna " + e.beginColumn);
+    public static void mostrarNoSeEsperaba(Token e) {
+        System.err.println("No se esperaba '" + (e.kind == EOF ? imagenes[EOF] : e.image) + "' en la línea " + e.beginLine + ", columna " + e.beginColumn);
+    }
+
+    public static void mostrarSeEsperaba(Token a, Token b) {
+        System.err.println("Se esperaba el símbolo: '" + a.image + "' en la línea " + b.beginLine + ", columna " + b.beginColumn);
     }
 
     public static Token getToken(int id) {

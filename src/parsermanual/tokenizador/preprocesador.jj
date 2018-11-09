@@ -9,9 +9,6 @@ PARSER_END(TokenizadorPreprocesador)
 SKIP : {
         " "
     |   "\t"
-    |   "\n"
-    |   "\r"
-    |   <"rem" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
 }
 
 TOKEN:
@@ -27,6 +24,7 @@ TOKEN : {
         <DIRECTIVA: "#">
     |   <INCLUDE: "include">
     |   <DEFINE: "define">
+    |   <NUEVA_LINEA: ("\r" | "\r\n" | "\n")+>
 }
 
 //Estandar para un identificador
@@ -54,9 +52,10 @@ TOKEN : {
     |   <COMILLA : "\"">
 }
 
+//Path válido
 TOKEN:
 {
-    <PATH: ("/"){0,1}(<IDENTIFICADOR>"/")*<IDENTIFICADOR>("."<IDENTIFICADOR>)+ >
+    <PATH: ("/"){0,1}(<IDENTIFICADOR>"/")*<IDENTIFICADOR>("."<IDENTIFICADOR>)>
 }
 void Start () : {}
 {

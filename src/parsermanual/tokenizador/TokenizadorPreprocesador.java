@@ -55,7 +55,7 @@ public class TokenizadorPreprocesador implements TokenizadorPreprocesadorConstan
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x3c00,0x3c00,};
+      jj_la1_0 = new int[] {0xb80,0xb80,};
    }
 
   /** Constructor with InputStream. */
@@ -193,7 +193,7 @@ public class TokenizadorPreprocesador implements TokenizadorPreprocesadorConstan
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[26];
+    boolean[] la1tokens = new boolean[24];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -207,7 +207,7 @@ public class TokenizadorPreprocesador implements TokenizadorPreprocesadorConstan
         }
       }
     }
-    for (int i = 0; i < 26; i++) {
+    for (int i = 0; i < 24; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

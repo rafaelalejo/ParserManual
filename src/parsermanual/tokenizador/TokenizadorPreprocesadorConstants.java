@@ -11,45 +11,47 @@ public interface TokenizadorPreprocesadorConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int PLUS = 6;
+  int PLUS = 3;
   /** RegularExpression Id. */
-  int MINUS = 7;
+  int MINUS = 4;
   /** RegularExpression Id. */
-  int MULTIPLY = 8;
+  int MULTIPLY = 5;
   /** RegularExpression Id. */
-  int DIVIDE = 9;
+  int DIVIDE = 6;
   /** RegularExpression Id. */
-  int DIRECTIVA = 10;
+  int DIRECTIVA = 7;
   /** RegularExpression Id. */
-  int INCLUDE = 11;
+  int INCLUDE = 8;
   /** RegularExpression Id. */
-  int DEFINE = 12;
+  int DEFINE = 9;
   /** RegularExpression Id. */
-  int IDENTIFICADOR = 13;
+  int NUEVA_LINEA = 10;
   /** RegularExpression Id. */
-  int LETRA = 14;
+  int IDENTIFICADOR = 11;
   /** RegularExpression Id. */
-  int DIGITO = 15;
+  int LETRA = 12;
   /** RegularExpression Id. */
-  int NUMERICO = 16;
+  int DIGITO = 13;
   /** RegularExpression Id. */
-  int ENTERO = 17;
+  int NUMERICO = 14;
   /** RegularExpression Id. */
-  int DECIMAL = 18;
+  int ENTERO = 15;
   /** RegularExpression Id. */
-  int COMA = 19;
+  int DECIMAL = 16;
   /** RegularExpression Id. */
-  int PAREN_IZQ = 20;
+  int COMA = 17;
   /** RegularExpression Id. */
-  int PAREN_DER = 21;
+  int PAREN_IZQ = 18;
   /** RegularExpression Id. */
-  int PATH_IZQ = 22;
+  int PAREN_DER = 19;
   /** RegularExpression Id. */
-  int PATH_DER = 23;
+  int PATH_IZQ = 20;
   /** RegularExpression Id. */
-  int COMILLA = 24;
+  int PATH_DER = 21;
   /** RegularExpression Id. */
-  int PATH = 25;
+  int COMILLA = 22;
+  /** RegularExpression Id. */
+  int PATH = 23;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -59,9 +61,6 @@ public interface TokenizadorPreprocesadorConstants {
     "<EOF>",
     "\" \"",
     "\"\\t\"",
-    "\"\\n\"",
-    "\"\\r\"",
-    "<token of kind 5>",
     "\"+\"",
     "\"-\"",
     "\"*\"",
@@ -69,6 +68,7 @@ public interface TokenizadorPreprocesadorConstants {
     "\"#\"",
     "\"include\"",
     "\"define\"",
+    "<NUEVA_LINEA>",
     "<IDENTIFICADOR>",
     "<LETRA>",
     "<DIGITO>",

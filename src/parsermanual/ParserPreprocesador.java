@@ -2,7 +2,6 @@ package parsermanual;
 
 import parsermanual.tokenizador.*;
 
-import javax.print.DocFlavor;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,40 +27,144 @@ public class ParserPreprocesador {
     public static Token A = Token.newToken(108, "A");
     public static Token B = Token.newToken(109, "B");
     public static Token C = Token.newToken(110, "C");
+    public static Token SYNCH = Token.newToken(-2, "SYNCH");
 
     //Simbolo vacio
     public static Token EPS = Token.newToken(-1, "EPS");
 
-    public static HashMap<Integer, Token> nonTerms = new HashMap<>();
+    public static HashMap<Integer, Token> terms = new HashMap<>();
 
     //Stacks para el algoritmo de parsing descente predictivo
     public static Stack<Token> source_s = new Stack<>();
     public static Stack<Token> parser_s = new Stack<>();
 
     public static void main(String[] args) {
+        prepararTerminales();
         prepararNoTerminales();
-        tokenizador = new TokenizadorPreprocesador(new StringReader("#define pi. 3.141516"));
 
-        //tokenizador = new TokenizadorPreprocesador(new StringReader("a + 3.141516*2*funca()"));
+        tokenizador = new TokenizadorPreprocesador(new StringReader("#define pi def*3.141516/2*2 + 4+512*func(a,b)"));
 
         Token t = tokenizador.getNextToken();
 
+        while (t.kind != 0) {
+            source_s.push(t);
+            t = tokenizador.getNextToken();
+        }
+
+        source_s.push(getToken(EOF));
+
+        //Los no terminales tienen que invertirse en orden LIFO
+        Collections.reverse(source_s);
+
+        //Primeros elementos del Stack
+        parser_s.push(getToken(EOF));
+        parser_s.push(S);
+
+        Token last_in, last_stack, prev_in;
+
+        boolean errores = false;
+
+        while (!source_s.isEmpty()) {
+            last_in = source_s.peek();
+            last_stack = parser_s.peek();
+
+            //Arreglo de producciones correspondientes a el no terminal de la
+            //cadena de entrada que se está parseando.
+            ArrayList<Token> prod;
+
+            if (table.isNonTerminal(last_stack)) {
+
+                //Obtener producción asignada al terminal
+                prod = table.getProd(last_stack, last_in);
+
+                //De no existir producción, se entra en modo pánico y se elimina el Token
+                if (prod == null) {
+                    mostrarError(last_in);
+                    errores = true;
+                    source_s.pop();
+                } else {
+
+                    parser_s.pop();
+
+                    for (Token temp : prod) {
+                        parser_s.push(temp);
+                    }
+
+                    //Comparar los 2 terminales
+                    if (parser_s.peek().kind == EPS.kind) {
+                        parser_s.pop();
+                    }
+
+                    if (parser_s.peek() == SYNCH) {
+                        errores = true;
+                        parser_s.pop();
+                    }
+                }
+
+            } else {
+                //Correción de errores
+                if (last_in.kind == last_stack.kind) {
+                    source_s.pop();
+                    parser_s.pop();
+                } else {
+                    mostrarError(last_in);
+                    System.err.println("Ocurrió un error interno.");
+                    return;
+                }
+            }
+
+            //Token de entrada previo
+            prev_in = last_in;
+        }
+
+        System.out.println("Parsing terminado " + (errores ? "con"  : "sin") + " errores.");
+    }
+
+    public static void mostrarError(Token e) {
+        System.err.println("No se esperaba símbolo: '" + e.image + "' en la línea " + e.beginLine + ", columna " + e.beginColumn);
+    }
+
+    public static Token getToken(int id) {
+        return terms.get(id);
+    }
+
+    public static void prepararTerminales() {
+        for (int i = 0; i < TokenizadorPreprocesadorConstants.tokenImage.length; i++) {
+            terms.put(i, Token.newToken(i, imagenes[i]));
+        }
+    }
+
+    public static void prepararNoTerminales() {
+
         //Para S
         table.addProd(S, getToken(DIRECTIVA), new Token[]{getToken(DIRECTIVA), M});
+
+        //SYNCH S
+        table.addProd(S, getToken(EOF), new Token[]{SYNCH});
 
         //Para M
         table.addProd(M, getToken(INCLUDE), new Token[]{getToken(INCLUDE), P});
         table.addProd(M, getToken(DEFINE), new Token[]{getToken(DEFINE), getToken(IDENTIFICADOR), A, E});
 
+        //SYNCH M
+        table.addProd(M, getToken(EOF), new Token[]{SYNCH});
+
         //Para P
         table.addProd(P, getToken(PATH_IZQ), new Token[]{getToken(PATH_IZQ), getToken(PATH), getToken(PATH_DER)});
         table.addProd(P, getToken(COMILLA), new Token[]{getToken(COMILLA), getToken(PATH), getToken(COMILLA)});
 
+        //SYNCH P
+        table.addProd(P, getToken(PATH_DER), new Token[]{SYNCH});
+        table.addProd(P, getToken(COMILLA), new Token[]{SYNCH});
 
         //Para E
         table.addProd(E, getToken(IDENTIFICADOR), new Token[]{T, EP});
         table.addProd(E, getToken(NUMERICO), new Token[]{T, EP});
         table.addProd(E, getToken(PAREN_IZQ), new Token[]{T, EP});
+
+        //SYNCH E
+        table.addProd(E, getToken(EOF), new Token[]{SYNCH});
+        table.addProd(E, getToken(PAREN_DER), new Token[]{SYNCH});
 
         //Para EP
         table.addProd(EP, getToken(PLUS), new Token[]{getToken(PLUS), T, EP});
@@ -73,6 +176,12 @@ public class ParserPreprocesador {
         table.addProd(T, getToken(IDENTIFICADOR), new Token[]{F, TP});
         table.addProd(T, getToken(NUMERICO), new Token[]{F, TP});
         table.addProd(T, getToken(PAREN_IZQ), new Token[]{F, TP});
+
+        //SYNCH T
+        table.addProd(T, getToken(PLUS), new Token[]{SYNCH});
+        table.addProd(T, getToken(MINUS), new Token[]{SYNCH});
+        table.addProd(T, getToken(PAREN_DER), new Token[]{SYNCH});
+        table.addProd(T, getToken(EOF), new Token[]{SYNCH});
 
         //Para TP
         table.addProd(TP, getToken(PLUS), new Token[]{EPS});
@@ -86,6 +195,12 @@ public class ParserPreprocesador {
         table.addProd(F, getToken(IDENTIFICADOR), new Token[]{getToken(IDENTIFICADOR), A});
         table.addProd(F, getToken(NUMERICO), new Token[]{getToken(NUMERICO)});
         table.addProd(F, getToken(PAREN_IZQ), new Token[]{getToken(PAREN_IZQ), E, getToken(PAREN_DER)});
+
+        //SYNCH F
+        table.addProd(F, getToken(PLUS), new Token[]{SYNCH});
+        table.addProd(F, getToken(MINUS), new Token[]{SYNCH});
+        table.addProd(F, getToken(PAREN_DER), new Token[]{SYNCH});
+        table.addProd(F, getToken(EOF), new Token[]{SYNCH});
 
         //Para A
         table.addProd(A, getToken(PAREN_IZQ), new Token[]{getToken(PAREN_IZQ), B, getToken(PAREN_DER)});
@@ -101,94 +216,12 @@ public class ParserPreprocesador {
         //Para B
         table.addProd(B, getToken(IDENTIFICADOR), new Token[]{getToken(IDENTIFICADOR), C});
 
+        //SYNCH B
+        table.addProd(B, getToken(PAREN_DER), new Token[]{SYNCH});
+
         //Para C
         table.addProd(C, getToken(COMA), new Token[]{getToken(COMA), B});
         table.addProd(C, getToken(PAREN_DER), new Token[]{EPS});
-
-        while (t.kind != 0) {
-            if (t != EPS) {
-                source_s.push(t);
-            }
-            try {
-                t = tokenizador.getNextToken();
-            } catch (TokenMgrError e) {
-                //System.out.println("Símbolo no reconocido encontrado: " + String.valueOf(e.));
-            }
-        }
-
-        source_s.push(getToken(EOF));
-
-        Collections.reverse(source_s);
-
-        parser_s.push(getToken(EOF));
-        parser_s.push(S);
-
-        printStacks();
-        while (!source_s.isEmpty()) {
-            Token last_in = source_s.peek();
-            Token last_stack = parser_s.peek();
-
-            //printStacks();
-            ArrayList<Token> prod;
-            if (table.isTerminal(last_stack)) {
-                prod = table.getProd(last_stack, last_in);
-
-                if (prod == null) {
-                    System.out.println("No se esperaba símbolo: " + last_in.image);
-                    System.out.println("S1: La cadena no pertenece");
-                    return;
-                }
-
-                parser_s.pop();
-
-                for (Token temp : prod) {
-                    parser_s.push(temp);
-                }
-
-                if (parser_s.peek().kind == EPS.kind) {
-                    parser_s.pop();
-                }
-
-            } else {
-                if (last_in.kind == last_stack.kind) {
-                    source_s.pop();
-                    parser_s.pop();
-                } else {
-                    //Agregando símbolo faltante
-                    //source_s.pop();
-                    //source_s.push(last_stack);
-
-                    System.out.println("Se esperaba símbolo: " + last_stack.image);
-                    System.out.println("S2:La cadena no pertenece");
-                    return;
-                }
-            }
-            printStacks();
-        }
-
-        System.out.println("La cadena pertenece al lenguaje!");
     }
 
-    public static Token getToken(int id) {
-        return nonTerms.get(id);
-    }
-
-    public static void prepararNoTerminales() {
-        for (int i = 0; i < TokenizadorPreprocesadorConstants.tokenImage.length; i++) {
-            nonTerms.put(i, Token.newToken(i, imagenes[i]));
-        }
-    }
-
-    public static void printStacks() {
-        System.out.println("STACK PARSER:");
-        for (Token t : parser_s) {
-            System.out.println(t.toString());
-        }
-
-        System.out.println("STACK SOURCE:");
-        for (Token t : source_s) {
-            System.out.println(t.toString());
-        }
-        System.out.println("------------------------");
-    }
 }

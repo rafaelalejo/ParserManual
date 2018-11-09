@@ -92,7 +92,7 @@
 //            TOKEN last_stack = parser_s.peek();
 //
 //            printStacks();
-//            if(table.isTerminal(last_stack)) {
+//            if(table.isNonTerminal(last_stack)) {
 //                prod = table.getProd(last_stack, last_in);
 //
 //                if(prod == null) {

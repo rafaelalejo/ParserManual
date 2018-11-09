@@ -1,19 +1,18 @@
 PARSER_BEGIN(TokenizadorPreprocesador)
-
 package parsermanual.tokenizador;
 
 public class TokenizadorPreprocesador {
 }
+
 PARSER_END(TokenizadorPreprocesador)
+
 SKIP : {
- " "
-|  "\t"
-|  "\n"
-|  "\r"
-|  <"rem" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+        " "
+    |   "\t"
+    |   "\n"
+    |   "\r"
+    |   <"rem" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
 }
-
-
 
 TOKEN:
 {
@@ -54,12 +53,6 @@ TOKEN : {
     |   <PATH_DER : ">">
     |   <COMILLA : "\"">
 }
-//TOKEN : {
-//        <FUNCION_DEFINE: <IDENTIFICADOR>"("<ARGS_FUNCION_DEFINE>")">
-//    |   <ARGS_FUNCION_DEFINE: <IDENTIFICADOR>(","(" ")*<IDENTIFICADOR>)*>
-//}
-
-//Punto de entrada
 
 TOKEN:
 {

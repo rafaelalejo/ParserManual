@@ -51,7 +51,7 @@ public class ParseTable {
         return null;
     }
 
-    public boolean isTerminal(Token test) {
+    public boolean isNonTerminal(Token test) {
         return table.containsKey(test);
     }
 }

@@ -67,3 +67,5 @@ void Start () : {}
     )*
     <EOF>
 }
+
+<*> TOKEN : { <UNEXPECTED: ~[] > }

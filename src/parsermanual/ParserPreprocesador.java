@@ -50,10 +50,14 @@ public class ParserPreprocesador {
 
             while (t.kind != 0 && t.kind != NUEVA_LINEA) {
                 source_s.push(t);
-                t = tokenizador.getNextToken();
+                try {
+                    t = tokenizador.getNextToken();
+                } catch (Exception e) {
+                    System.out.println("Token no identificado.");
+                }
             }
 
-            if(t.kind ==  EOF) {
+            if (t.kind == EOF) {
                 source_s.push(t);
             } else {
                 source_s.push(getToken(EOF));
@@ -68,8 +72,12 @@ public class ParserPreprocesador {
 
             parsearEntrada();
 
-            if(t.kind == NUEVA_LINEA) {
-                t = tokenizador.getNextToken();
+            if (t.kind == NUEVA_LINEA) {
+                try {
+                    t = tokenizador.getNextToken();
+                } catch (Exception e) {
+                    System.out.println("Token no identificado.");
+                }
             }
 
         }

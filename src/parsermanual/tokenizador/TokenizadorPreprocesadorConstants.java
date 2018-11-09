@@ -52,6 +52,8 @@ public interface TokenizadorPreprocesadorConstants {
   int COMILLA = 22;
   /** RegularExpression Id. */
   int PATH = 23;
+  /** RegularExpression Id. */
+  int UNEXPECTED = 24;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -82,6 +84,7 @@ public interface TokenizadorPreprocesadorConstants {
     "\">\"",
     "\"\\\"\"",
     "<PATH>",
+    "<UNEXPECTED>",
   };
 
 }
